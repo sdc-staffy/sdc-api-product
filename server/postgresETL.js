@@ -3,16 +3,6 @@ const fs = require('fs');
 require("dotenv").config();
 const path = require("path");
 const { from: copyFrom } = require('pg-copy-streams');
-const csvParser = require('csv-parser');
-const { Transform } = require('stream');
-const {stringify} = require('csv-stringify'); 
-
-//const logger = new Transform({
-//    transform(chunk, encoding, callback) {
-//      console.log(chunk.toString());
-//      callback(null, chunk);
-//    },
-//  });
 
 
 const client = new Client({
@@ -140,42 +130,13 @@ const loadFeaturesData = async () => {
     })
 }
 
-const replaceNullStrings = new Transform({
-    transform(chunk, encoding, callback) {
-        if (chunk['sale_price'] === 'null') {
-            chunk['sale_price'] = null;
-        }
-        if (Number(chunk['sale_price'])) {
-            chunk['sale_price'] = Number(chunk['sale_price'])
-        }
-        if (chunk['default_style'] === "0") {
-            chunk['default_style'] = 0;
-        }
-        if (Number(chunk['default_style'])) {
-            chunk['default_style'] = Number(chunk['default_style'])
-        }
-
-        stringify(chunk, (err, output) => {
-            if(err){
-                callback(err);
-            }else{
-                this.push(output);
-                callback();
-            }
-        });
-    }, 
-    objectMode: true
-})
-
 const loadStylesData = async () => {
     const stream = fs.createReadStream(stylesPath);
-    const query = `COPY styles FROM STDIN WITH (FORMAT csv, HEADER true)`;
+    const query = `COPY styles FROM STDIN WITH (FORMAT csv, NULL 'null', HEADER true)`;
     const copyStream = client.query(copyFrom(query));
 
     return new Promise((resolve, reject) => {
         stream
-            .pipe(csvParser())
-            .pipe(replaceNullStrings)
             .pipe(copyStream)
             .on('finish', resolve)
             .on('error', reject)
