@@ -7,7 +7,7 @@ const { from: copyFrom } = require('pg-copy-streams');
 
 const client = new Client({
   host: 'localhost',
-  port: process.env.PORT,
+  port: process.env.PGPORT,
   database: 'products',
   user: process.env.USER,
   password: process.env.PASSWORD
@@ -31,6 +31,14 @@ const createCartTable = `
         product_id INT REFERENCES product(product_id),
         active INT 
     );
+`;
+
+const createRelatedTable = `
+CREATE TABLE related (
+    related_id INT PRIMARY KEY,
+    current_product_id INT REFERENCES product(product_id),
+    related_product_id INT 
+);
 `;
 
 const createFeaturesTable = `
@@ -75,6 +83,7 @@ const setupAllTables = async () => {
     await client.query('DROP TABLE IF EXISTS photos, skus, styles, features, cart, product;');
     await client.query(createProductTable);
     await client.query(createCartTable);
+    await client.query(createRelatedTable);
     await client.query(createFeaturesTable);
     await client.query(createStylesTable);
     await client.query(createSkusTable);
@@ -83,13 +92,11 @@ const setupAllTables = async () => {
 
 const productPath = path.join(__dirname, '../csv_files', 'product.csv');
 const cartPath = path.join(__dirname, '../csv_files', 'cart.csv');
+const relatedPath = path.join(__dirname, '../csv_files', 'related.csv');
 const featuresPath = path.join(__dirname, '../csv_files', 'features.csv');
 const stylesPath = path.join(__dirname, '../csv_files', 'styles.csv');
 const skusPath = path.join(__dirname, '../csv_files', 'skus.csv');
 const photosPath = path.join(__dirname, '../csv_files', 'photos.csv');
-
-
-
 
 const loadProductData = async () => {
     const stream = fs.createReadStream(productPath);
@@ -107,6 +114,18 @@ const loadProductData = async () => {
 const loadCartData = async () => {
     const stream = fs.createReadStream(cartPath);
     const query = `COPY cart FROM STDIN WITH (FORMAT csv, HEADER true)`;
+    const copyStream = client.query(copyFrom(query));
+
+    return new Promise((resolve, reject) => {
+        stream
+            .pipe(copyStream)
+            .on('finish', resolve)
+            .on('error', reject)
+    })
+}
+const loadRelatedData = async () => {
+    const stream = fs.createReadStream(relatedPath);
+    const query = `COPY related FROM STDIN WITH (FORMAT csv, HEADER true)`;
     const copyStream = client.query(copyFrom(query));
 
     return new Promise((resolve, reject) => {
@@ -175,6 +194,8 @@ const loadAllData = async () => {
     console.log("---> Completed product Dataload")
     await loadCartData();
     console.log("---> Completed cart Dataload")
+    await loadRelatedData();
+    console.log("---> Completed related Dataload")
     await loadFeaturesData();
     console.log("---> Completed features Dataload")
     await loadStylesData();
@@ -189,12 +210,14 @@ const run = async () => {
     try {
         await client.connect();
         console.time("setupAllTables");
+
         await setupAllTables();
         console.timeEnd("setupAllTables");
 
         console.time("loadAllData");
         await loadAllData();
         console.timeEnd("loadAllData");
+
         console.log('Data loaded successfully');
         await client.end();
     } catch (err) {
