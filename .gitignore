@@ -1,0 +1,15 @@
+## NPM ##
+npm
+npm-debug.log
+node_modules/
+
+# Compiled Dirs (http://nodejs.org/api/addons.html)
+build/
+bundle.js
+bundle.js.map
+
+#env file
+.env
+
+#csv_files 
+csv_files/
