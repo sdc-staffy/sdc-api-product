@@ -13,3 +13,5 @@ bundle.js.map
 
 #csv_files 
 csv_files/
+
+.DS_Store
