@@ -27,7 +27,6 @@ const getAllProducts = async (count) => {
         return console.error(err);
     }
 }
-//get list of all products (default limit 5)
 
 app.get('/products', (req, res) => {
     const count = req.query.count ? req.query.count: 5;
@@ -66,8 +65,6 @@ const getProductInfo = async (product_id) => {
     }
 }
 
-//get one product information 
-
 app.get('/products/:product_id', (req, res) => {
     const product_id = Number.parseInt(req.params.product_id)
 
@@ -77,8 +74,6 @@ app.get('/products/:product_id', (req, res) => {
         })
         .catch((err)=>console.log('could not get products:', err))
 })
-
-//get one product's styles 
 
 const getStyleInfo = async (product_id) => {
     const styleInfoQuery = `
@@ -138,19 +133,31 @@ app.get('/products/:product_id/styles', (req, res) => {
         })
 })
 
+const getRelatedProducts = async (product_id) => {
+    const relatedQuery = `
+        SELECT json_agg(related_product_id) as related_info
+        FROM related
+        WHERE current_product_id = ${product_id}
+    `
 
+    try {
+        const response = await db.query(relatedQuery);
+        return response.rows[0].related_info
 
-//get one product's related products
-/*
+    } catch (err) {
+        return console.err(err);
+    }
+}
+
 app.get('/products/:product_id/related', (req, res) => {
-    const product_id = ....
+    const product_id = Number.parseInt(req.params.product_id)
 
-     db.getRelatedProducts(product_id)
+     getRelatedProducts(product_id)
         .then((data) => {
             res.send(data)
         })
 })
-*/
+
 
 
 
