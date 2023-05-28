@@ -50,6 +50,7 @@ const createStylesTable = `
             original_price INT,
             default_style VARCHAR
         );
+        CREATE INDEX styleid_index ON styles (style_id)
 `;
 
 const createSkusTable = `
@@ -59,6 +60,7 @@ const createSkusTable = `
             size VARCHAR,
             quantity INT
         );
+        CREATE INDEX skus_styleid_index ON skus (styleId);
 `;
 
 const createPhotosTable = `
@@ -68,16 +70,22 @@ const createPhotosTable = `
             url VARCHAR,
             thumbnail_url VARCHAR
         );
+        CREATE INDEX photos_styleid_index ON photos (styleId);
 `;
 
 const setupAllTables = async () => {
-    await client.query('DROP TABLE IF EXISTS photos, skus, styles, features, related, product;');
-    await client.query(createProductTable);
-    await client.query(createRelatedTable);
-    await client.query(createFeaturesTable);
-    await client.query(createStylesTable);
-    await client.query(createSkusTable);
-    await client.query(createPhotosTable);
+    try {
+        await client.query('DROP TABLE IF EXISTS photos, skus, styles, features, related, product;');
+        console.log('---> ALL TABLES DROPPED');
+        await client.query(createProductTable);
+        await client.query(createRelatedTable);
+        await client.query(createFeaturesTable);
+        await client.query(createStylesTable);
+        await client.query(createSkusTable);
+        await client.query(createPhotosTable);
+    } catch (err) {
+        console.error("Error setting up tables: ", err);
+    }
 }
 
 const productPath = path.join(__dirname, '../../csv_files', 'product.csv');
@@ -167,18 +175,22 @@ const loadPhotosData = async () => {
 
 
 const loadAllData = async () => {
-    await loadProductData();
-    console.log("---> Completed product Dataload")
-    await loadRelatedData();
-    console.log("---> Completed related Dataload")
-    await loadFeaturesData();
-    console.log("---> Completed features Dataload")
-    await loadStylesData();
-    console.log("---> Completed styles Dataload")
-    await loadSkusData();
-    console.log("---> Completed skus Dataload")
-    await loadPhotosData();
-    console.log("---> Completed photos Dataload")
+    try {
+        await loadProductData();
+        console.log("---> Completed product Dataload")
+        await loadRelatedData();
+        console.log("---> Completed related Dataload")
+        await loadFeaturesData();
+        console.log("---> Completed features Dataload")
+        await loadStylesData();
+        console.log("---> Completed styles Dataload")
+        await loadSkusData();
+        console.log("---> Completed skus Dataload")
+        await loadPhotosData();
+        console.log("---> Completed photos Dataload")
+    } catch (err) {
+        console.error("Error loading tables: ", err);
+    }
 }
 
 const run = async () => {
