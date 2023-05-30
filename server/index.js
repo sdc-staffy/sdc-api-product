@@ -1,10 +1,13 @@
 require("dotenv").config();
 const express = require("express");
 const db = require('./db/db.js');
+const morgan = require('morgan')
 const {getAllProducts, getProductInfo, getStyleInfo, getRelatedProducts} = require('./controller.js');
 
 const app = express();
 app.use(express.json());
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'))
 
 
 app.get('/products', (req, res) => {
@@ -47,4 +50,4 @@ app.get('/products/:product_id/related', (req, res) => {
         })
 })
 
-module.exports = { app, db, getAllProducts, getProductInfo, getStyleInfo, getRelatedProducts };
+module.exports = {app, db};
