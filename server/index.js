@@ -37,7 +37,7 @@ app.get('/products/:product_id/styles', (req, res) => {
     
     getStyleInfo(product_id)
         .then((data) => {
-            res.send(data)
+            res.json(data)
         })
 })
 
