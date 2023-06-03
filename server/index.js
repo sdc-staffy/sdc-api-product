@@ -16,7 +16,7 @@ app.get('/products', (req, res) => {
         .then((data) => {
             res.send(data)
         })
-        .catch((err)=>console.log('could not get products:', err))
+        .catch((err)=>console.log('could not get products: ', err))
 })
 
 
@@ -27,7 +27,7 @@ app.get('/products/:product_id', (req, res) => {
         .then((data) => {
             res.send(data)
         })
-        .catch((err)=>console.log('could not get products:', err))
+        .catch((err)=>console.log('could not get product: ', err))
 })
 
 
@@ -39,6 +39,7 @@ app.get('/products/:product_id/styles', (req, res) => {
         .then((data) => {
             res.json(data)
         })
+        .catch((err)=>console.log('could not get styles info: ', err))
 })
 
 app.get('/products/:product_id/related', (req, res) => {
@@ -48,6 +49,7 @@ app.get('/products/:product_id/related', (req, res) => {
         .then((data) => {
             res.send(data)
         })
+        .catch((err)=>console.log('could not get related products: ', err))
 })
 
 module.exports = {app, db};
