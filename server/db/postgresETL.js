@@ -6,11 +6,11 @@ const { from: copyFrom } = require('pg-copy-streams');
 
 
 const client = new Client({
-  host: process.env.HOST,
+  host: process.env.PGHOST,
   port: process.env.PGPORT,
-  database: process.env.DB,
-  user: process.env.USER,
-  password: process.env.PASSWORD
+  database: process.env.PGDB,
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD
 })
 
 const createProductTable  = `
@@ -22,6 +22,7 @@ CREATE TABLE product (
     category VARCHAR,
     default_price INT
 );
+CREATE INDEX product_index ON product (id);
 `;
 
 const createRelatedTable = `
@@ -30,6 +31,7 @@ CREATE TABLE related (
     current_product_id INT REFERENCES product(id),
     related_product_id INT 
 );
+CREATE INDEX relatedProductId_index ON related (current_product_id);
 `;
 
 const createFeaturesTable = `
@@ -39,6 +41,7 @@ const createFeaturesTable = `
             feature VARCHAR,
             value VARCHAR
         );
+        CREATE INDEX featuresProductId_index ON features (product_id);
 `;
 
 const createStylesTable = `
@@ -50,7 +53,8 @@ const createStylesTable = `
             original_price INT,
             default_style VARCHAR
         );
-        CREATE INDEX styleid_index ON styles (style_id)
+        CREATE INDEX styleid_index ON styles (style_id);
+        CREATE INDEX styleProductId_index ON styles(product_id);
 `;
 
 const createSkusTable = `
