@@ -51,74 +51,53 @@ const getProductInfo = async (product_id) => {
     }
 }
 
-
 const getStyleInfo = async (product_id) => {
     const styleInfoQuery = `
     SELECT json_build_object(
-      'product_id', product_id, 
-      'results', json_agg(
-        json_build_object(
-          'style_id', style_id,
-          'name', name,
-          'original_price', original_price,
-          'sale_price', sale_price,
-          'default?', CASE WHEN default_style::integer = 1 THEN true ELSE false END
-        )
-      )
-    ) as styles_info
-    FROM styles
-    WHERE product_id = ${product_id}
-    GROUP BY product_id;`;
-
-  const photosQuery = `
-    SELECT styleid, json_agg(
-      json_build_object(
-        'thumbnail_url', thumbnail_url,
-        'url', url
-      )) as photos_agg
-    FROM photos
-    WHERE styleid IN (
-      SELECT style_id FROM styles WHERE product_id = ${product_id}
-    )
-    GROUP BY styleid;`;
-
-  const skusQuery = `
-    SELECT styleid, json_agg(
-      json_build_object(
-        sku_id, json_build_object(
-          'quantity', quantity,
-          'size', size 
-        )
-      )
-    ) as skus_agg
-    FROM skus
-    WHERE styleid IN (
-      SELECT style_id FROM styles WHERE product_id = ${product_id}
-    )
-    GROUP BY styleid;`;
-
-  try {
-    const [stylesResponse, photosResponse, skusResponse] = await Promise.all([
-      db.query(styleInfoQuery),
-      db.query(photosQuery),
-      db.query(skusQuery),
-    ]);
-
-    let styles_info = stylesResponse.rows[0].styles_info;
-    let photos_agg = photosResponse.rows.reduce((obj, item) => (obj[item.styleid] = item.photos_agg, obj) ,{});
-    let skus_agg = skusResponse.rows.reduce((obj, item) => (obj[item.styleid] = item.skus_agg, obj) ,{});
-
-
-      styles_info.results = styles_info.results.map(result => {
-      result.photos = photos_agg[result.style_id] || [];
-      result.skus = skus_agg[result.style_id] || [];
-      return result;
-    });
-
-    return styles_info;
-  } catch (err) {
-    console.error(err);
-  }
+        'product_id', styles.product_id, 
+        'results', json_agg(
+            json_build_object(
+              'style_id', style_id,
+              'name', name,
+              'original_price', original_price,
+              'sale_price', sale_price,
+              'default?', CASE WHEN default_style::integer = 1 THEN true ELSE false END,
+              'photos', photos_agg,
+              'skus', skus_agg
+          )
+        ) 
+      ) as styles_info
+      FROM styles
+      LEFT JOIN (
+          SELECT styleid, json_agg(
+              json_build_object(
+                  'thumbnail_url', thumbnail_url,
+                  'url', url
+              )) as photos_agg
+          FROM photos
+          GROUP BY styleid
+          ) photos ON styles.style_id = photos.styleid
+      LEFT JOIN (
+          SELECT styleid, json_agg(
+              json_build_object(
+                  sku_id, json_build_object(
+                      'quantity', quantity,
+                      'size', size 
+                  )
+              )
+          ) as skus_agg
+          FROM skus
+          GROUP BY styleid
+      ) skus ON styles.style_id = skus.styleid
+      WHERE styles.product_id = ${product_id}
+      GROUP BY styles.product_id;      
+    `
+    try {
+        const response = await db.query(styleInfoQuery);
+        return response.rows[0].styles_info;
+    } catch (err) {
+        return console.error(err);
+    }
 }
 
 const getRelatedProducts = async (product_id) => {
@@ -133,7 +112,7 @@ const getRelatedProducts = async (product_id) => {
         return response.rows[0].related_info
 
     } catch (err) {
-        return console.err(err);
+        return console.error(err);
     }
 }
 
