@@ -3,7 +3,7 @@
 Hyperloop API is a backend project designed for an e-commerce website, specifically handling the "products" section. The primary focus of this project was to construct efficient database queries and optimize them for performance.
 
 <p float="left">
-  <img src="/images/Javascript-logo.png" width="200" />
+  <img src="/images/JavaScript.png" width="200" />
   <img src="/images/nodejs.png" width="200" /> 
   <img src="/images/express.png" width="200" />
   <img src="/images/postgres.png" width="200" />
